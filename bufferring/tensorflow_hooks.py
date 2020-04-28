@@ -15,7 +15,7 @@ def reduce(tensor):
     # 1. Send gradients and update ptable for my cycle
     global cycle
     cycle += 1
-    send_msg = Message(rank, cycle)
+    send_msg = Message(rank, cycle) # TODO: Send gradients together
     send_q.put(send_msg)
     table.update(rank)
 
@@ -25,7 +25,7 @@ def reduce(tensor):
         try:
             while True:
                 recv_msg = recv_q.get_nowait()
-                # tensor += recv_msg.grads
+                # tensor += recv_msg.grads TODO: Aggregate received gradients
                 table.update(recv_msg.src)
         except Empty:
             if table.bounded(5):
