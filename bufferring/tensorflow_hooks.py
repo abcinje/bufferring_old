@@ -1,12 +1,12 @@
-from mpi import comm, size, rank
-from mpi import send_q, recv_q
 from queue import Empty
+from common.message import Message
+from common.mpi import comm, size, rank
+from common.mpi import send_q, recv_q
+from common.ptable import ProgressTable
 import tensorflow as tf
-import message
-import ptable
 
 cycle = 0
-table = ptable.ProgressTable(size, rank)
+table = ProgressTable(size, rank)
 
 def reduce(tensor):
     if isinstance(tensor, tf.IndexedSlices):
@@ -15,7 +15,7 @@ def reduce(tensor):
     # 1. Send gradients and update ptable for my cycle
     global cycle
     cycle += 1
-    send_msg = message.Message(rank, cycle)
+    send_msg = Message(rank, cycle)
     send_q.put(send_msg)
     table.update(rank)
 
