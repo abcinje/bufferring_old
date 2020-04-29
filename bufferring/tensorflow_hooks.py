@@ -1,8 +1,8 @@
 from queue import Empty
-from common.message import Message
-from common.mpi import comm, size, rank
-from common.mpi import send_q, recv_q
-from common.ptable import ProgressTable
+from bufferring.common.message import Message
+from bufferring.common.mpi import comm, size, rank
+from bufferring.common.mpi import send_q, recv_q
+from bufferring.common.ptable import ProgressTable
 import tensorflow as tf
 
 cycle = 0
