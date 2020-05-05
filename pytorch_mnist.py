@@ -30,6 +30,8 @@ parser.add_argument('--fp16-allreduce', action='store_true', default=False,
                     help='use fp16 compression during allreduce')
 parser.add_argument('--use-adasum', action='store_true', default=False,
                     help='use adasum algorithm to do reduction')
+parser.add_argument('--threshold', type=int, default=5, metavar='T',
+                    help='staleness threshold (default: 5)')
 
 
 class Net(nn.Module):
@@ -186,7 +188,8 @@ if __name__ == '__main__':
     # Horovod: wrap optimizer with DistributedOptimizer.
     optimizer = bfr.DistributedOptimizer(optimizer,
                                          named_parameters=model.named_parameters(),
-                                         compression=compression)
+                                         compression=compression,
+                                         threshold=args.threshold)
 
     for epoch in range(1, args.epochs + 1):
         train(epoch)

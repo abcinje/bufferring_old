@@ -5,9 +5,10 @@ import queue
 import torch
 
 class _DistributedOptimizer(torch.optim.Optimizer):
-    def __init__(self, params, named_parameters, compression):
+    def __init__(self, params, named_parameters, compression, threshold):
         super(self.__class__, self).__init__(params)
         self._compression = compression
+        self._threshold = threshold
         
         if named_parameters is not None:
             named_parameters = list(named_parameters)
@@ -99,7 +100,7 @@ class _DistributedOptimizer(torch.optim.Optimizer):
                     tensor /= 2
                     self._table.update(recv_msg.src, recv_msg.name)
             except queue.Empty:
-                if not self._table.blocked(5):
+                if not self._table.blocked(self._threshold):
                     break
         p.grad.set_(tensor)
 
@@ -110,7 +111,8 @@ class _DistributedOptimizer(torch.optim.Optimizer):
         return hook
 
 def DistributedOptimizer(optimizer, named_parameters=None,
-                         compression=Compression.none):
+                         compression=Compression.none,
+                         threshold=5):
     cls = type(optimizer.__class__.__name__, (optimizer.__class__,),
         dict(_DistributedOptimizer.__dict__))
-    return cls(optimizer.param_groups, named_parameters, compression)
+    return cls(optimizer.param_groups, named_parameters, compression, threshold)
