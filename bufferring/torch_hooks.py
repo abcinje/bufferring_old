@@ -90,6 +90,7 @@ class _DistributedOptimizer(torch.optim.Optimizer):
 
         # 2. Apply received (possibly multiple) updates
         #    and block until the staleness goes below the threshold
+        count = 0
         while True:
             try:
                 while True:
@@ -97,11 +98,13 @@ class _DistributedOptimizer(torch.optim.Optimizer):
                     recv_tensor = self._compression.decompress(recv_msg.grad, ctx)
                     assert tensor.size() == recv_tensor.size()
                     tensor += recv_tensor
-                    tensor /= 2
+                    count += 1 # number of received tensors
                     self._table.update(recv_msg.src, recv_msg.name)
             except queue.Empty:
                 if not self._table.blocked(self._threshold):
                     break
+
+        tensor /= count + 1
         p.grad.set_(tensor)
 
     def _make_hook(self, p):
