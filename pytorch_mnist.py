@@ -181,14 +181,12 @@ if __name__ == '__main__':
     '''
 
     # Horovod: (optional) compression algorithm.
-    # TODO: compression
-    '''
-    compression = hvd.Compression.fp16 if args.fp16_allreduce else hvd.Compression.none
-    '''
+    compression = bfr.Compression.fp16 if args.fp16_allreduce else bfr.Compression.none
 
     # Horovod: wrap optimizer with DistributedOptimizer.
     optimizer = bfr.DistributedOptimizer(optimizer,
-                                         named_parameters=model.named_parameters())
+                                         named_parameters=model.named_parameters(),
+                                         compression=compression)
 
     for epoch in range(1, args.epochs + 1):
         train(epoch)

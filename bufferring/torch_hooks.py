@@ -1,11 +1,13 @@
 from bufferring.common.mpi import size, rank
 from bufferring.common import message, mpi, ptable
+from bufferring.compression import Compression
 import queue
 import torch
 
 class _DistributedOptimizer(torch.optim.Optimizer):
-    def __init__(self, params, named_parameters):
+    def __init__(self, params, named_parameters, compression):
         super(self.__class__, self).__init__(params)
+        self._compression = compression
         
         if named_parameters is not None:
             named_parameters = list(named_parameters)
@@ -77,10 +79,11 @@ class _DistributedOptimizer(torch.optim.Optimizer):
     def _allreduce_grad_async(self, p):
         name = self._parameter_names.get(p)
         tensor = p.grad
+        tensor_compressed, ctx = self._compression.compress(tensor)
         
         # 1. Send gradients and update ptable
         cycle = self._table.get_my_cycle(name)
-        send_msg = message.Message(rank, cycle, name, tensor)
+        send_msg = message.Message(rank, cycle, name, tensor_compressed)
         mpi.send_q.put(send_msg)
         self._table.update(rank, name)
 
@@ -90,8 +93,9 @@ class _DistributedOptimizer(torch.optim.Optimizer):
             try:
                 while True:
                     recv_msg = mpi.recv_q[name].get_nowait()
-                    assert tensor.size() == recv_msg.grad.size()
-                    tensor += recv_msg.grad
+                    recv_tensor = self._compression.decompress(recv_msg.grad, ctx)
+                    assert tensor.size() == recv_tensor.size()
+                    tensor += recv_tensor
                     tensor /= 2
                     self._table.update(recv_msg.src, recv_msg.name)
             except queue.Empty:
@@ -105,7 +109,8 @@ class _DistributedOptimizer(torch.optim.Optimizer):
             self._allreduce_grad_async(p)
         return hook
 
-def DistributedOptimizer(optimizer, named_parameters=None):
+def DistributedOptimizer(optimizer, named_parameters=None,
+                         compression=Compression.none):
     cls = type(optimizer.__class__.__name__, (optimizer.__class__,),
         dict(_DistributedOptimizer.__dict__))
-    return cls(optimizer.param_groups, named_parameters)
+    return cls(optimizer.param_groups, named_parameters, compression)
