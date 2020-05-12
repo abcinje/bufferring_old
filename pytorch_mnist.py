@@ -1,5 +1,6 @@
 from __future__ import print_function
 import argparse
+import sys
 import torch.multiprocessing as mp
 import torch.nn as nn
 import torch.nn.functional as F
@@ -71,6 +72,7 @@ def train(epoch):
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_sampler),
                 100. * batch_idx / len(train_loader), loss.item()))
+            sys.stdout.flush()
 
 
 # TODO: metric_average
