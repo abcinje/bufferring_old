@@ -11,11 +11,14 @@ $ cd bufferring/setup/
 
 ### 1. Install NVIDIA driver and docker, and configure ssh
 ```
-$ ./common.sh
+$ source common.sh
 ```
 
 ### 2. Re-login
 _Note: From now on, instances can be logged in using port 2222, not 22._
+```
+$ cd bufferring/setup/
+```
 
 ### 3-1. Configure NFS (server)
 ```
