@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+apt update && apt install -y openssh-server
+echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+systemctl restart ssh
+
 PUBLICKEY="$HOME/cloud/id_rsa.pub"
 
 if [ ! -f $PUBLICKEY ]; then
