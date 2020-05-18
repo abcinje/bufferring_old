@@ -2,7 +2,7 @@
 
 ### 0. Download git repository
 ```
-$ sudo apt update && sudo apt install git
+$ sudo apt update && sudo apt install -y git
 $ git clone https://github.com/abcinje/bufferring.git
 $ cd bufferring/setup/
 ```
@@ -41,7 +41,7 @@ $ docker run --gpus all -it --network=host -v $HOME/cloud:/root/cloud <docker_im
 ### 0. Download git repository
 ```
 # cd
-# apt update && apt install git
+# apt update && apt install -y git
 # git clone https://github.com/abcinje/bufferring.git
 # cd bufferring/setup/
 ```
