@@ -2,7 +2,7 @@
 
 sudo apt install -y nfs-common
 
-mkdir $HOME/cloud
+mkdir -p $HOME/cloud
 if [ $# -lt 1 ]; then
 	echo "Usage: $0 <server_ip>" >&2
 	exit 1
