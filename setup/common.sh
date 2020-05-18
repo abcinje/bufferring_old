@@ -20,5 +20,10 @@ curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.li
 sudo apt update && sudo apt install -y nvidia-container-toolkit
 sudo systemctl restart docker
 
+# ssh
+PORT=2222
+sudo bash -c "echo Port $PORT >> /etc/ssh/sshd_config"
+sudo systemctl restart ssh
+
 echo "Re-login required to start docker"
 logout
