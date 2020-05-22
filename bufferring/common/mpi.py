@@ -24,3 +24,6 @@ def receiver():
 
 send_thr = threading.Thread(target=sender)
 recv_thr = threading.Thread(target=receiver)
+
+def bcast(data, root):
+    return comm.bcast(data, root)

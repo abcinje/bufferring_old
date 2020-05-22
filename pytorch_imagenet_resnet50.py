@@ -298,11 +298,8 @@ if __name__ == '__main__':
         optimizer.load_state_dict(checkpoint['optimizer'])
 
     # Horovod: broadcast parameters & optimizer state.
-    # TODO: broadcast
-    '''
-    hvd.broadcast_parameters(model.state_dict(), root_rank=0)
-    hvd.broadcast_optimizer_state(optimizer, root_rank=0)
-    '''
+    bfr.broadcast_state(model)
+    bfr.broadcast_state(optimizer)
 
     for epoch in range(resume_from_epoch, args.epochs):
         train(epoch)

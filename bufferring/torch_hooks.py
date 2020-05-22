@@ -119,3 +119,14 @@ def DistributedOptimizer(optimizer, named_parameters=None,
     cls = type(optimizer.__class__.__name__, (optimizer.__class__,),
         dict(_DistributedOptimizer.__dict__))
     return cls(optimizer.param_groups, named_parameters, compression, threshold)
+
+def broadcast_state(obj, root=0):
+    if rank == root:
+        state_dict = obj.state_dict()
+    else:
+        state_dict = None
+    
+    state_dict = mpi.bcast(state_dict, root)
+
+    if rank != root:
+        obj.load_state_dict(state_dict)
