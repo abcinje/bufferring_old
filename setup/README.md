@@ -33,7 +33,7 @@ $ nfs/client.sh <server_ip>
 ### 4. Download and run docker image
 ```
 $ docker pull <docker_image>
-$ docker run --gpus all -it --network=host -v $HOME/cloud:/root/cloud <docker_image>
+$ docker run --gpus all -it --network=host --ipc=host -v $HOME/cloud:/root/cloud <docker_image>
 ```
 
 ## Container
