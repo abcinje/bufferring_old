@@ -164,12 +164,8 @@ class Metric(object):
         self.n = torch.tensor(0.)
 
     def update(self, val):
-        # TODO: Metric.update
-        '''
-        self.sum += hvd.allreduce(val.detach().cpu(), name=self.name)
+        self.sum += val
         self.n += 1
-        '''
-        return
 
     @property
     def avg(self):
@@ -186,7 +182,7 @@ if __name__ == '__main__':
 
     if args.cuda:
         # Horovod: pin GPU to local rank.
-        torch.cuda.set_device(hvd.local_rank())
+        torch.cuda.set_device('cuda:0')
         torch.cuda.manual_seed(args.seed)
 
     cudnn.benchmark = True
