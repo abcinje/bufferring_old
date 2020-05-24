@@ -1,5 +1,5 @@
-from bufferring.common.mpi import size, rank
-from bufferring.common import message, mpi, ptable
+from bufferring.mpi import size, rank
+from bufferring import message, mpi, ptable
 from bufferring.compression import Compression
 import queue
 import torch
