@@ -7,7 +7,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 import torch.utils.data.distributed
-from bufferring import torch_hooks as bfr
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
@@ -115,16 +114,16 @@ def test():
         print('\nTest set: Average loss: {:.4f}, Accuracy: {:.2f}%\n'.format(
             test_loss, 100. * test_accuracy))
 
-
 if __name__ == '__main__':
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
+    from bufferring import torch_hooks as bfr
     torch.manual_seed(args.seed)
 
     if args.cuda:
         # Horovod: pin GPU to local rank.
-        torch.cuda.set_device(hvd.local_rank())
+        torch.cuda.set_device('cuda:0')
         torch.cuda.manual_seed(args.seed)
 
 

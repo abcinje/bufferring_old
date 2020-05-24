@@ -8,7 +8,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data.distributed
 from torchvision import datasets, transforms, models
-from bufferring import torch_hooks as bfr
 import os
 import math
 from tqdm import tqdm
@@ -178,6 +177,7 @@ if __name__ == '__main__':
 
     allreduce_batch_size = args.batch_size * args.batches_per_allreduce
 
+    from bufferring import torch_hooks as bfr
     torch.manual_seed(args.seed)
 
     if args.cuda:
