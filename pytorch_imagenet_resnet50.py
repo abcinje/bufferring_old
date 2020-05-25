@@ -56,6 +56,8 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
 parser.add_argument('--seed', type=int, default=42,
                     help='random seed')
 
+parser.add_argument('--log', action='store_true', default=False,
+                    help='enables logging')
 
 def train(epoch):
     model.train()
@@ -89,6 +91,9 @@ def train(epoch):
                            'accuracy': 100. * train_accuracy.avg.item()})
             t.update(1)
 
+            if args.log:
+                log.write(f'T {epoch+1} {batch_idx+1} {train_loss.avg.item():.2f} {100.*train_accuracy.avg.item():.2f}\n')
+
     if log_writer:
         log_writer.add_scalar('train/loss', train_loss.avg, epoch)
         log_writer.add_scalar('train/accuracy', train_accuracy.avg, epoch)
@@ -113,6 +118,9 @@ def validate(epoch):
                 t.set_postfix({'loss': val_loss.avg.item(),
                                'accuracy': 100. * val_accuracy.avg.item()})
                 t.update(1)
+
+                if args.log:
+                    log.write(f'V {epoch+1} {batch_idx+1} {val_loss.avg.item():.2f} {100.*val_accuracy.avg.item():.2f}\n')
 
     if log_writer:
         log_writer.add_scalar('val/loss', val_loss.avg, epoch)
@@ -178,6 +186,11 @@ if __name__ == '__main__':
     allreduce_batch_size = args.batch_size * args.batches_per_allreduce
 
     from bufferring import torch_hooks as bfr
+
+    if args.log:
+        log = open(f'log_rank{bfr.rank}', 'w')
+        log.write('#(Epoch / Batch / Loss / Accuracy)\n')
+
     torch.manual_seed(args.seed)
 
     if args.cuda:
@@ -296,8 +309,12 @@ if __name__ == '__main__':
     # Horovod: broadcast parameters & optimizer state.
     bfr.broadcast_state(model)
     bfr.broadcast_state(optimizer)
-
-    for epoch in range(resume_from_epoch, args.epochs):
-        train(epoch)
-        validate(epoch)
-        save_checkpoint(epoch)
+    try:
+        for epoch in range(resume_from_epoch, args.epochs):
+            train(epoch)
+            validate(epoch)
+            save_checkpoint(epoch)
+    finally:
+        if args.log:
+            log.flush()
+            log.close()
