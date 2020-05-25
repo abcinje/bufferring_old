@@ -146,7 +146,7 @@ def accuracy(output, target):
 
 
 def save_checkpoint(epoch):
-    if bfr.rank() == 0:
+    if bfr.rank == 0:
         filepath = args.checkpoint_format.format(epoch=epoch + 1)
         state = {
             'model': model.state_dict(),
@@ -287,7 +287,7 @@ if __name__ == '__main__':
 
     # Restore from a previous checkpoint, if initial_epoch is specified.
     # Horovod: restore on the first worker which will broadcast weights to other workers.
-    if resume_from_epoch > 0 and hvd.rank() == 0:
+    if resume_from_epoch > 0 and bfr.rank == 0:
         filepath = args.checkpoint_format.format(epoch=resume_from_epoch)
         checkpoint = torch.load(filepath)
         model.load_state_dict(checkpoint['model'])
