@@ -12,6 +12,7 @@ import os
 import math
 from tqdm import tqdm
 from distutils.version import LooseVersion
+from datetime import datetime
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Example',
@@ -92,7 +93,7 @@ def train(epoch):
             t.update(1)
 
             if args.log:
-                log.write(f'T {epoch+1} {batch_idx+1} {train_loss.avg.item():.2f} {100.*train_accuracy.avg.item():.2f}\n')
+                log.write(f'{epoch+1} {batch_idx+1} {train_loss.avg.item():.2f} {100.*train_accuracy.avg.item():.2f}\n')
 
     if log_writer:
         log_writer.add_scalar('train/loss', train_loss.avg, epoch)
@@ -118,9 +119,6 @@ def validate(epoch):
                 t.set_postfix({'loss': val_loss.avg.item(),
                                'accuracy': 100. * val_accuracy.avg.item()})
                 t.update(1)
-
-                if args.log:
-                    log.write(f'V {epoch+1} {batch_idx+1} {val_loss.avg.item():.2f} {100.*val_accuracy.avg.item():.2f}\n')
 
     if log_writer:
         log_writer.add_scalar('val/loss', val_loss.avg, epoch)
@@ -190,6 +188,9 @@ if __name__ == '__main__':
     if args.log:
         log = open(f'log_rank{bfr.rank}', 'w')
         log.write('#(Epoch / Batch / Loss / Accuracy)\n')
+
+        timelog = open(f'timelog_rank{bfr.rank}', 'w')
+        timelog.write('#(Epoch / Start / Finish)\n')
 
     torch.manual_seed(args.seed)
 
@@ -311,10 +312,22 @@ if __name__ == '__main__':
     bfr.broadcast_state(optimizer)
     try:
         for epoch in range(resume_from_epoch, args.epochs):
+            if args.log:
+                t = datetime.now().strftime('%H:%M:%S')
+                timelog.write(f'{epoch+1} {t}')
+
             train(epoch)
+
+            if args.log:
+                t = datetime.now().strftime('%H:%M:%S')
+                timelog.write(f' {t}\n')
+
             validate(epoch)
             save_checkpoint(epoch)
+
     finally:
         if args.log:
             log.flush()
             log.close()
+            timelog.flush()
+            timelog.close()
