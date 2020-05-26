@@ -104,8 +104,9 @@ class _DistributedOptimizer(torch.optim.Optimizer):
                 if not self._table.blocked(self._threshold):
                     break
 
-        tensor /= count + 1
-        p.grad.set_(tensor)
+        if count > 0:
+            tensor /= count + 1
+            p.grad.set_(tensor)
 
     def _make_hook(self, p):
         def hook(*ignore):
