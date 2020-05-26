@@ -1,5 +1,5 @@
 from mpi4py import MPI
-import threading
+import multiprocessing as mp
 
 assert MPI.Query_thread() == MPI.THREAD_MULTIPLE
 
@@ -22,8 +22,8 @@ def receiver():
         if msg.src != (rank+1)%size:
             send_q.put(msg)
 
-send_thr = threading.Thread(target=sender)
-recv_thr = threading.Thread(target=receiver)
+send_proc = mp.Process(target=sender)
+recv_proc = mp.Process(target=receiver)
 
 def bcast(data, root):
     return comm.bcast(data, root)
