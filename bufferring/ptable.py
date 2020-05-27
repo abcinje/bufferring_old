@@ -2,7 +2,7 @@ class ProgressTable:
     def __init__(self, size, rank, name_list):
         assert size > 0
         assert rank >= 0 and rank < size
-        self.__table = size * [{name: 0 for name in name_list}]
+        self.__table = [{name: 0 for name in name_list} for _ in range(size)]
         self.__size = size
         self.__rank = rank
 
