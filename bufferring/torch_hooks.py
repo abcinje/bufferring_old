@@ -46,8 +46,8 @@ class _DistributedOptimizer(torch.optim.Optimizer):
 
         mpi.send_q = queue.Queue()
         mpi.recv_q = {name: queue.Queue() for name in names}
-        mpi.send_proc.start()
-        mpi.recv_proc.start()
+        mpi.send_thr.start()
+        mpi.recv_thr.start()
 
         self._grad_accs = []
         self._requires_update = set()
