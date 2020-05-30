@@ -16,3 +16,7 @@ def init(comm):
     comm_ptr = MPI._addressof(comm)
     comm_val = MPI_Comm.from_address(comm_ptr)
     _lib.init(comm_val)
+
+# Do not call this function
+def deinit():
+    _lib.deinit()

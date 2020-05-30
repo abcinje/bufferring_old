@@ -1,4 +1,4 @@
-SRCS = interface.cpp
+SRCS = comm.cpp interface.cpp
 CXX = mpicxx
 CXXFLAGS = -fPIC
 OBJS = $(SRCS:.cpp=.o)
