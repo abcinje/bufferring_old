@@ -1,24 +1,23 @@
 #ifndef _COMM_HPP_
 #define _COMM_HPP_
 
-#include <map>
 #include <thread>
 
+#include "ntable.hpp"
 #include "queue.hpp"
 
-using std::map;
-using std::string;
 using std::thread;
 
 class Receiver {
 private:
-	map<string, Queue<char *> *> *m;
+	NameTable *ntable;
+	Queue<char *> *q;
 	thread *thr;
 
 	static void recv_routine(void);
 
 public:
-	Receiver(const char **names, int names_len);
+	Receiver(NameTable *nametable);
 	~Receiver(void);
 };
 

@@ -16,6 +16,7 @@ void deinit(void);
 
 int size, rank;
 
+NameTable *ntable;
 Receiver *receiver;
 Sender *sender;
 
@@ -24,12 +25,14 @@ void init(MPI_Comm comm, const char **names, int names_len)
 	MPI_Comm_size(comm, &size);
 	MPI_Comm_rank(comm, &rank);
 
-	receiver = new Receiver(names, names_len);
-	sender = new Sender();
+	ntable = new NameTable(names, names_len);
+	receiver = new Receiver(ntable);
+	sender = new Sender;
 }
 
 void deinit(void)
 {
 	delete receiver;
 	delete sender;
+	delete ntable;
 }

@@ -6,14 +6,9 @@ void Receiver::recv_routine(void)
 	while (true);
 }
 
-Receiver::Receiver(const char **names, int names_len)
+Receiver::Receiver(NameTable *nametable) : ntable(nametable)
 {
-	m = new map<string, Queue<char *> *>;
-	for (int i = 0; i < names_len; i++) {
-		string name = names[i];
-		m->insert(make_pair(name, new Queue<char *>));
-	}
-
+	q = new Queue<char *>[nametable->size()];
 	thr = new thread(recv_routine);
 }
 
@@ -21,11 +16,7 @@ Receiver::~Receiver(void)
 {
 	thr->join();
 	delete thr;
-
-	map<string, Queue<char *> *>::iterator it;
-	for (it = m->begin(); it != m->end(); it++)
-		delete it->second;
-	delete m;
+	delete q;
 }
 
 void Sender::send_routine(void)
