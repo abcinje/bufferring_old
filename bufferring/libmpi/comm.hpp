@@ -1,6 +1,7 @@
 #ifndef _COMM_HPP_
 #define _COMM_HPP_
 
+#include <mpi.h>
 #include <thread>
 
 #include "ntable.hpp"
@@ -8,29 +9,43 @@
 
 using std::thread;
 
-class Receiver {
-private:
-	NameTable *ntable;
-	Queue<char *> *q;
-	thread *thr;
-
-	static void recv_routine(void);
-
+class QEntry {
 public:
-	Receiver(NameTable *nametable);
-	~Receiver(void);
+	char *data;
+	int len;
+
+	QEntry(void);
+	QEntry(char *databuf, int length);
 };
 
 class Sender {
 private:
-	Queue<char *> *q;
+	Queue<QEntry> *q;
 	thread *thr;
 
-	static void send_routine(void);
+	void send_routine(void);
 
 public:
 	Sender(void);
 	~Sender(void);
+
+	void put(QEntry &qentry);
+};
+
+class Receiver {
+private:
+	NameTable *ntable;
+	Queue<QEntry> *q;
+	thread *thr;
+	Sender *sender;
+
+	void recv_routine(void);
+
+public:
+	Receiver(NameTable *nametable, Sender *the_sender);
+	~Receiver(void);
+
+	bool get_nowait(QEntry &qentry, int nametag);
 };
 
 #endif /* _COMM_HPP_ */
