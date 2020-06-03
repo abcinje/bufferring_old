@@ -1,23 +1,24 @@
 #include "util.hpp"
 
-char *attach_source(char *bytes, int len)
+char *attach_header(char *bytes, int &len, hdr_t name)
 {
-	char *message = new char[sizeof(hdr_t) + len];
+	char *message = new char[(2 * sizeof(hdr_t)) + len];
 	*((hdr_t *)message) = rank;
-	memcpy(message + sizeof(hdr_t), bytes, len);
+	*(((hdr_t *)message) + 1) = name;
+	memcpy(message + (2 * sizeof(hdr_t)), bytes, len);
 
+	len += 2 * sizeof(hdr_t);
 	return message;
 }
 
-char *detach_source(char *message, int len)
+char *detach_header(char *message, int &len, hdr_t &src, hdr_t &name)
 {
-	char *bytes = new char[len - sizeof(hdr_t)];
-	memcpy(bytes, message + sizeof(hdr_t), len - sizeof(hdr_t));
+	src = *((hdr_t *)message);
+	name = *(((hdr_t *)message) + 1);
+
+	len -= 2 * sizeof(hdr_t);
+	char *bytes = new char[len];
+	memcpy(bytes, message + (2 * sizeof(hdr_t)), len);
 
 	return bytes;
-}
-
-hdr_t get_source(char *message)
-{
-	return *((hdr_t *)message);
 }
