@@ -1,5 +1,5 @@
-from bufferring.mpi import size, rank
-from bufferring import message, mpi, ptable
+from bufferring.libmpi import size, rank
+from bufferring import message, libmpi, ptable
 from bufferring.compression import Compression
 import queue
 import torch
@@ -44,10 +44,7 @@ class _DistributedOptimizer(torch.optim.Optimizer):
                  for param_group in self.param_groups
                  for p in param_group['params']]
 
-        mpi.send_q = queue.Queue()
-        mpi.recv_q = {name: queue.Queue() for name in names}
-        mpi.send_thr.start()
-        mpi.recv_thr.start()
+        libmpi.init(libmpi.comm, names)
 
         self._grad_accs = []
         self._requires_update = set()
@@ -85,7 +82,7 @@ class _DistributedOptimizer(torch.optim.Optimizer):
         # 1. Send gradients and update ptable
         cycle = self._table.get_my_cycle(name)
         send_msg = message.Message(rank, cycle, name, tensor_compressed)
-        mpi.send_q.put(send_msg)
+        libmpi.put(name, send_msg)
         self._table.update(rank, name)
 
         # 2. Apply received (possibly multiple) updates
@@ -94,14 +91,14 @@ class _DistributedOptimizer(torch.optim.Optimizer):
         while True:
             try:
                 while True:
-                    recv_msg = mpi.recv_q[name].get_nowait()
+                    recv_msg = libmpi.get_nowait(name)
                     recv_tensor = self._compression.decompress(recv_msg.grad, ctx)
                     assert tensor.size() == recv_tensor.size()
                     tensor += recv_tensor
                     count += 1 # number of received tensors
                     self._table.update(recv_msg.src, recv_msg.name)
-            except queue.Empty:
-                if not self._table.blocked(self._threshold):
+            except BufferError:
+                if not self._table.blocked(name, self._threshold):
                     break
 
         if count > 0:
@@ -127,7 +124,7 @@ def broadcast_state(obj, root=0):
     else:
         state_dict = None
     
-    state_dict = mpi.bcast(state_dict, root)
+    state_dict = libmpi.comm.bcast(state_dict, root)
 
     if rank != root:
         obj.load_state_dict(state_dict)

@@ -12,6 +12,8 @@ else:
     MPI_Comm = ctypes.c_void_p
 
 comm = MPI.COMM_WORLD
+size = comm.Get_size()
+rank = comm.Get_rank()
 
 #######################
 # Type Specifications #

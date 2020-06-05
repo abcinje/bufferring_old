@@ -13,13 +13,14 @@ class ProgressTable:
         assert node >= 0 and node < self.__size
         self.__table[node][name] += 1
 
-    def blocked(self, thresh):
-        maximum = max([max(d.values()) for d in self.__table])
-        minimum = min([min(d.values()) for d in self.__table])
+    def blocked(self, name, thresh):
+        cycles = [d[name] for d in self.__table]
+        maximum = max(cycles)
+        minimum = min(cycles)
 
         if thresh > maximum - minimum:
             return False
-        elif minimum in self.__table[self.__rank].values():
+        elif self.__table[self.__rank][name] == minimum:
             return False
         else:
             return True
