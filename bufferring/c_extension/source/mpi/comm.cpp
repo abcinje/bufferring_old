@@ -1,12 +1,15 @@
+#include <torch/extension.h>
+#include <mpi.h>
+
 #include "comm.hpp"
 
-int rank, size;
+extern int rank, size;
 
 bool mpi_init(void)
 {
 	MPI_Init(NULL, NULL);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	MPI_Comm_size(mMPI_COMM_WORLD, &size);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	return true;
 }
 
