@@ -13,7 +13,7 @@ def deinit():
     bfr_core.deinit()
 
 def process(tensor, name):
-    bfr_core.process(tensor, name)
+    return bfr_core.process(tensor, name)
 
 def bcast(obj, root):
     return comm.bcast(obj, root)

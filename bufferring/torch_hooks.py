@@ -75,7 +75,10 @@ class _DistributedOptimizer(torch.optim.Optimizer):
     def _allreduce_grad_async(self, p):
         name = self._parameter_names.get(p)
         tensor = p.grad
-        core.process(tensor, name)
+        cpu_tensor = tensor.to('cpu')
+        if core.process(cpu_tensor, name):
+            tensor = cpu_tensor.to('cuda')
+            p.grad.set_(tensor)
 
     def _make_hook(self, p):
         def hook(*ignore):
