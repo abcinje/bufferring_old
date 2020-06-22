@@ -1,5 +1,5 @@
-from bufferring.libmpi import size, rank
-from bufferring import message, libmpi, ptable
+from bufferring.core import size, rank
+from bufferring import core, message, ptable
 from bufferring.compression import Compression
 import queue
 import torch
@@ -38,13 +38,11 @@ class _DistributedOptimizer(torch.optim.Optimizer):
                              '%s' % ', '.join(str(id) for id in unnamed_param_ids))
 
         self._parameter_names = {v: k for k, v in sorted(named_parameters)}
-
-        # MPI
         names = [self._parameter_names.get(p)
                  for param_group in self.param_groups
                  for p in param_group['params']]
 
-        libmpi.init(libmpi.comm, names)
+        core.init(names, threshold)
 
         self._grad_accs = []
         self._requires_update = set()
@@ -77,33 +75,7 @@ class _DistributedOptimizer(torch.optim.Optimizer):
     def _allreduce_grad_async(self, p):
         name = self._parameter_names.get(p)
         tensor = p.grad
-        tensor_compressed, ctx = self._compression.compress(tensor)
-        
-        # 1. Send gradients and update ptable
-        cycle = self._table.get_my_cycle(name)
-        send_msg = message.Message(rank, cycle, name, tensor_compressed)
-        libmpi.put(name, send_msg)
-        self._table.update(rank, name)
-
-        # 2. Apply received (possibly multiple) updates
-        #    and block until the staleness goes below the threshold
-        count = 0
-        while True:
-            try:
-                while True:
-                    recv_msg = libmpi.get_nowait(name)
-                    recv_tensor = self._compression.decompress(recv_msg.grad, ctx)
-                    assert tensor.size() == recv_tensor.size()
-                    tensor += recv_tensor
-                    count += 1 # number of received tensors
-                    self._table.update(recv_msg.src, recv_msg.name)
-            except BufferError:
-                if not self._table.blocked(name, self._threshold):
-                    break
-
-        if count > 0:
-            tensor /= count + 1
-            p.grad.set_(tensor)
+        core.process(tensor, name)
 
     def _make_hook(self, p):
         def hook(*ignore):
@@ -119,12 +91,8 @@ def DistributedOptimizer(optimizer, named_parameters=None,
     return cls(optimizer.param_groups, named_parameters, compression, threshold)
 
 def broadcast_state(obj, root=0):
-    if rank == root:
-        state_dict = obj.state_dict()
-    else:
-        state_dict = None
-    
-    state_dict = libmpi.comm.bcast(state_dict, root)
+    state_dict = obj.state_dict() if rank == root else None
+    state_dict = core.bcast(state_dict, root)
 
     if rank != root:
         obj.load_state_dict(state_dict)
