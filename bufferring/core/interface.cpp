@@ -44,7 +44,7 @@ void deinit(void)
 	delete ntable;
 }
 
-void process(torch::Tensor &t, std::string name)
+bool process(torch::Tensor &t, std::string name)
 {
 	TorchTensor tensor(t);
 
@@ -73,8 +73,11 @@ void process(torch::Tensor &t, std::string name)
 		else if (!ptable->blocked(nametag, threshold))
 			break;
 	}
-	if (count > 0)
+	if (count > 0) {
 		tensor /= (count + 1);
+		return true;
+	}
+	return false;
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
