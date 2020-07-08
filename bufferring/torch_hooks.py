@@ -1,5 +1,5 @@
 from bufferring.core import size, rank
-from bufferring import core, message, ptable
+from bufferring import core
 from bufferring.compression import Compression
 import queue
 import torch
@@ -9,7 +9,7 @@ class _DistributedOptimizer(torch.optim.Optimizer):
         super(self.__class__, self).__init__(params)
         self._compression = compression
         self._threshold = threshold
-        
+
         if named_parameters is not None:
             named_parameters = list(named_parameters)
         else:
@@ -48,8 +48,6 @@ class _DistributedOptimizer(torch.optim.Optimizer):
         self._requires_update = set()
         if size > 1:
             self._register_hooks()
-
-        self._table = ptable.ProgressTable(size, rank, names)
 
     @staticmethod
     def find_duplicates(lst):
